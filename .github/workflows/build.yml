@@ -1,0 +1,104 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            configure: cmake -B build -G "Visual Studio 17 2022" -A x64 -DLUMORA_BUILD_TESTS=OFF
+            artifact: LumoraSynth-Windows
+          - name: macOS
+            os: macos-latest
+            configure: cmake -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DLUMORA_BUILD_TESTS=OFF
+            artifact: LumoraSynth-macOS
+          - name: Linux
+            os: ubuntu-22.04
+            configure: cmake -B build -DCMAKE_BUILD_TYPE=Release
+            artifact: LumoraSynth-Linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libfreetype-dev libfontconfig1-dev libx11-dev \
+            libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev \
+            libgl1-mesa-dev xvfb
+
+      - name: Configure
+        shell: bash
+        run: ${{ matrix.configure }}
+
+      - name: Build
+        shell: bash
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Render test
+        if: runner.os == 'Linux'
+        run: xvfb-run -a build/LumoraRenderTest_artefacts/Release/LumoraRenderTest
+
+      - name: Validate with pluginval
+        if: runner.os == 'Linux'
+        run: |
+          curl -sSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Linux.zip
+          unzip -o pluginval.zip
+          xvfb-run -a ./pluginval --strictness-level 5 --validate-in-process \
+            "build/LumoraSynth_artefacts/Release/VST3/Lumora Synth.vst3"
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp -R "build/LumoraSynth_artefacts/Release/VST3/Lumora Synth.vst3" dist/
+          if [ -d "build/LumoraSynth_artefacts/Release/AU/Lumora Synth.component" ]; then
+            cp -R "build/LumoraSynth_artefacts/Release/AU/Lumora Synth.component" dist/
+          fi
+          if [ -d "build/LumoraSynth_artefacts/Release/Standalone" ]; then
+            cp -R build/LumoraSynth_artefacts/Release/Standalone/* dist/
+          fi
+          cp README.md dist/
+
+      - name: Ad-hoc sign (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          for b in dist/*.vst3 dist/*.component dist/*.app; do
+            [ -e "$b" ] && codesign --force --deep --sign - "$b"
+          done
+
+      - name: Zip
+        shell: bash
+        run: |
+          cd dist
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            7z a -tzip "../${{ matrix.artifact }}.zip" .
+          else
+            zip -ry "../${{ matrix.artifact }}.zip" .
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.zip
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact }}.zip
