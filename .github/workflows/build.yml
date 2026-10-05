@@ -50,6 +50,20 @@ jobs:
         shell: bash
         run: cmake --build build --config Release --parallel 4
 
+      - name: Check macOS architectures and minimum version
+        if: runner.os == 'macOS'
+        run: |
+          set -e
+          for b in "build/LumoraSynth_artefacts/Release/VST3/Lumora Synth.vst3/Contents/MacOS/Lumora Synth" \
+                   "build/LumoraSynth_artefacts/Release/AU/Lumora Synth.component/Contents/MacOS/Lumora Synth" \
+                   "build/LumoraSynth_artefacts/Release/Standalone/Lumora Synth.app/Contents/MacOS/Lumora Synth"; do
+            echo "$b: $(lipo -archs "$b")"
+            lipo "$b" -verify_arch x86_64 arm64
+            minos=$(vtool -arch x86_64 -show-build "$b" | awk '/minos/ {print $2}')
+            echo "  Intel minimum macOS: $minos"
+            [ "$minos" = "10.13" ]
+          done
+
       - name: Render test
         if: runner.os == 'Linux'
         run: xvfb-run -a build/LumoraRenderTest_artefacts/Release/LumoraRenderTest

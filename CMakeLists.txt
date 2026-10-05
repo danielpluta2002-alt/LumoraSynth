@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(LumoraSynth VERSION 1.0.1 LANGUAGES C CXX)
+# Must be set before project(), otherwise CMake ignores it and the binaries
+# require the macOS version of the build machine.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
+
+project(LumoraSynth VERSION 1.0.2 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if(APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
-endif()
 
 option(LUMORA_BUILD_TESTS "Build the offline render test" ON)
 
@@ -30,7 +30,7 @@ if(APPLE)
 endif()
 
 juce_add_plugin(LumoraSynth
-    VERSION 1.0.1
+    VERSION 1.0.2
     COMPANY_NAME "Lumora"
     COMPANY_WEBSITE "https://github.com/danielpluta2002-alt"
     PLUGIN_MANUFACTURER_CODE Lmra
