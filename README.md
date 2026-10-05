@@ -57,7 +57,7 @@ xattr -cr ~/Library/Audio/Plug-Ins/VST3/"Lumora Synth.vst3"
 
 ## Selbst bauen
 
-Voraussetzungen: CMake ≥ 3.22 und ein C++17-Compiler (Visual Studio 2022, Xcode oder GCC/Clang). JUCE wird beim Konfigurieren automatisch heruntergeladen.
+Voraussetzungen: CMake ≥ 3.22 und ein C++17-Compiler (Visual Studio 2022 oder neuer, Xcode oder GCC/Clang). JUCE wird beim Konfigurieren automatisch heruntergeladen.
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
