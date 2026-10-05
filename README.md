@@ -101,4 +101,15 @@ tests/RenderTest.cpp  Offline-Test
 
 ## Lizenz
 
-JUCE steht unter AGPLv3 bzw. der kommerziellen JUCE-Lizenz. Wer das Plugin veröffentlicht oder verkauft, muss eine der beiden einhalten: Quellcode unter AGPLv3 offenlegen oder eine JUCE-Lizenz nutzen (die kostenlose „Starter“-Lizenz gilt bis zu einem bestimmten Jahresumsatz). VST ist eine Marke der Steinberg Media Technologies GmbH.
+Lumora Synth ist freie Software unter der **GNU Affero General Public License, Version 3 oder später** (`AGPL-3.0-or-later`). Den vollständigen Text findest du in [LICENSE](LICENSE).
+
+Kurz gesagt:
+- Du darfst das Plugin nutzen, verändern, weitergeben und auch verkaufen.
+- Wer das Plugin (oder eine veränderte Version) weitergibt, muss den vollständigen Quellcode unter derselben Lizenz mitliefern oder zugänglich machen.
+- Es gibt keine Gewährleistung.
+
+Die Oberfläche zeigt Copyright und Lizenz über den Knopf **ABOUT** an.
+
+Verwendete Komponenten:
+- [JUCE](https://juce.com) – hier unter AGPLv3 genutzt (JUCE ist doppelt lizenziert: AGPLv3 oder kommerzielle JUCE-Lizenz)
+- VST3 SDK (über JUCE) – Steinberg-Lizenz oder GPLv3; VST ist eine Marke der Steinberg Media Technologies GmbH

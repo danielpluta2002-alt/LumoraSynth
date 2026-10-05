@@ -67,7 +67,8 @@ target_compile_definitions(LumoraSynth PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
-    JUCE_DISPLAY_SPLASH_SCREEN=0)
+    JUCE_DISPLAY_SPLASH_SCREEN=0
+    LUMORA_VERSION="${PROJECT_VERSION}")
 
 target_link_libraries(LumoraSynth
     PRIVATE
@@ -82,7 +83,8 @@ if(LUMORA_BUILD_TESTS)
     juce_add_console_app(LumoraRenderTest PRODUCT_NAME "LumoraRenderTest")
     target_sources(LumoraRenderTest PRIVATE tests/RenderTest.cpp ${LUMORA_SOURCES})
     target_include_directories(LumoraRenderTest PRIVATE Source)
-    target_compile_definitions(LumoraRenderTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+    target_compile_definitions(LumoraRenderTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
+        LUMORA_VERSION="${PROJECT_VERSION}")
     target_link_libraries(LumoraRenderTest PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp

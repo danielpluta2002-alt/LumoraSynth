@@ -1,3 +1,23 @@
+/*
+    Lumora Synth - polyphonic synthesizer plugin
+    Copyright (C) 2026 danielpluta2002-alt
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+    SPDX-License-Identifier: AGPL-3.0-or-later
+*/
+
 #include "PluginEditor.h"
 #include "Parameters.h"
 #include "gui/Controls.h"
@@ -875,6 +895,7 @@ public:
         // Header
         auto header = r.removeFromTop (headerHeight).reduced (12, 8);
         header.removeFromLeft (230);
+        aboutButton.setBounds (header.removeFromLeft (64));
         voiceCount.setBounds (header.removeFromRight (110));
         header.removeFromRight (12);
         loadButton.setBounds (header.removeFromRight (64));
@@ -945,13 +966,27 @@ private:
         loadButton.setButtonText ("LOAD");
         saveButton.onClick = [this] { savePreset(); };
         loadButton.onClick = [this] { loadPreset(); };
-        for (auto* b : { &prevButton, &nextButton, &saveButton, &loadButton })
+        aboutButton.setButtonText ("ABOUT");
+        aboutButton.onClick = [] { showAbout(); };
+        for (auto* b : { &prevButton, &nextButton, &saveButton, &loadButton, &aboutButton })
             addAndMakeVisible (b);
 
         voiceCount.setFont (uiFont (12.0f, true));
         voiceCount.setColour (juce::Label::textColourId, colours::textDim);
         voiceCount.setJustificationType (juce::Justification::centredRight);
         addAndMakeVisible (voiceCount);
+    }
+
+    /** Copyright, licence and warranty notice, as AGPLv3 section 5(d) asks of interactive programs. */
+    static void showAbout()
+    {
+        juce::AlertWindow::showMessageBoxAsync (
+            juce::MessageBoxIconType::InfoIcon, "Lumora Synth " + juce::String (LUMORA_VERSION),
+            "Copyright (C) 2026 danielpluta2002-alt\n\n"
+            "This program is free software, licensed under the GNU Affero General Public "
+            "License version 3 or later (AGPL-3.0-or-later). It comes with ABSOLUTELY NO WARRANTY.\n\n"
+            "Source code and licence text:\nhttps://github.com/danielpluta2002-alt/LumoraSynth\n\n"
+            "Built with JUCE (AGPLv3). VST is a trademark of Steinberg Media Technologies GmbH.");
     }
 
     void setupTabs()
@@ -1112,7 +1147,7 @@ private:
     juce::TextButton modTab, arpTab, fxTab;
 
     juce::ComboBox presetBox;
-    juce::TextButton prevButton, nextButton, saveButton, loadButton;
+    juce::TextButton prevButton, nextButton, saveButton, loadButton, aboutButton;
     juce::Label voiceCount;
     juce::Array<juce::File> userPresets;
     juce::String shownPresetName;
