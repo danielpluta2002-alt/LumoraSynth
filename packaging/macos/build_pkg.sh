@@ -31,7 +31,8 @@ component() {
     pkgbuild --analyze --root "$root" "$plist"
     local i=0
     while /usr/libexec/PlistBuddy -c "Print :$i" "$plist" >/dev/null 2>&1; do
-        /usr/libexec/PlistBuddy -c "Set :$i:BundleIsRelocatable false" "$plist"
+        # plutil -replace also creates the key, which newer pkgbuild no longer writes.
+        plutil -replace "$i.BundleIsRelocatable" -bool NO "$plist"
         i=$((i + 1))
     done
 
