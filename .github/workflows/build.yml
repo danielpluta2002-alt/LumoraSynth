@@ -59,7 +59,9 @@ jobs:
                    "build/LumoraSynth_artefacts/Release/Standalone/Lumora Synth.app/Contents/MacOS/Lumora Synth"; do
             echo "$b: $(lipo -archs "$b")"
             lipo "$b" -verify_arch x86_64 arm64
-            minos=$(vtool -arch x86_64 -show-build "$b" | awk '/minos/ {print $2}')
+            # Targets below 10.14 use LC_VERSION_MIN_MACOSX ("version"), newer ones LC_BUILD_VERSION ("minos").
+            vtool -arch x86_64 -show-build "$b"
+            minos=$(vtool -arch x86_64 -show-build "$b" | awk '$1 == "minos" || $1 == "version" {print $2; exit}')
             echo "  Intel minimum macOS: $minos"
             [ "$minos" = "10.13" ]
           done
