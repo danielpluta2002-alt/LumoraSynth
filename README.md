@@ -40,7 +40,21 @@ Distortion (Overdrive, Hard Clip, Foldback, Bitcrush, Decimate) → Phaser → C
 
 ## Installation (fertige Builds)
 
-Jeder Push auf `main` baut das Plugin per GitHub Actions für Windows, macOS und Linux. Die ZIPs findest du unter **Actions → letzter Lauf → Artifacts**, bei Tags `v*` zusätzlich unter **Releases**.
+Jeder Push auf `main` baut das Plugin per GitHub Actions für Windows, macOS und Linux. Die Dateien findest du unter **Actions → letzter Lauf → Artifacts**, bei Tags `v*` zusätzlich unter **Releases**.
+
+### macOS: Installer (empfohlen)
+
+`LumoraSynth-macOS-Installer.pkg` herunterladen und öffnen. Der Installer legt VST3, Audio Unit und die Standalone-App für alle Benutzer ab; unter „Anpassen“ lassen sich einzelne Teile abwählen:
+
+| Teil            | Zielordner |
+|-----------------|------------|
+| VST3            | `/Library/Audio/Plug-Ins/VST3/` |
+| Audio Unit      | `/Library/Audio/Plug-Ins/Components/` |
+| Standalone-App  | `/Applications/` |
+
+Der Installer ist nicht von Apple signiert. Meldet macOS beim Öffnen, dass er nicht geprüft werden kann: Rechtsklick auf die Datei → **Öffnen**, oder unter **Systemeinstellungen → Datenschutz & Sicherheit** auf **Trotzdem öffnen** klicken. Danach die Plug-ins in der DAW neu scannen lassen.
+
+### Manuell (ZIP)
 
 | System  | Datei                    | Zielordner |
 |---------|--------------------------|------------|

@@ -108,6 +108,35 @@ jobs:
             [ -e "$b" ] && codesign --force --deep --sign - "$b"
           done
 
+      - name: Build installer (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          version=$(sed -n 's/^project(LumoraSynth VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          echo "Version: $version"
+          packaging/macos/build_pkg.sh dist "$version" LumoraSynth-macOS-Installer.pkg
+          ls -la LumoraSynth-macOS-Installer.pkg
+
+      - name: Install and validate (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -e
+          sudo installer -pkg LumoraSynth-macOS-Installer.pkg -target /
+          ls -d "/Library/Audio/Plug-Ins/VST3/Lumora Synth.vst3" \
+                "/Library/Audio/Plug-Ins/Components/Lumora Synth.component" \
+                "/Applications/Lumora Synth.app"
+          pkgutil --pkgs | grep com.lumora.lumorasynth
+
+          # Audio Unit: Apple's own validator.
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 3
+          auval -v aumu LmS1 Lmra
+
+          # VST3: load the installed plug-in in pluginval.
+          curl -sSL -o pluginval-mac.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -oq pluginval-mac.zip
+          pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests \
+            "/Library/Audio/Plug-Ins/VST3/Lumora Synth.vst3"
+
       - name: Zip
         shell: bash
         run: |
@@ -121,10 +150,14 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}.zip
+          path: |
+            ${{ matrix.artifact }}.zip
+            LumoraSynth-macOS-Installer.pkg
 
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.artifact }}.zip
+          files: |
+            ${{ matrix.artifact }}.zip
+            LumoraSynth-macOS-Installer.pkg

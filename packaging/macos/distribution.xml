@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>Lumora Synth @VERSION@</title>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <license file="LICENSE.txt"/>
+    <options customize="allow" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="10.13"/>
+        </allowed-os-versions>
+    </volume-check>
+
+    <choices-outline>
+        <line choice="vst3"/>
+        <line choice="au"/>
+        <line choice="app"/>
+    </choices-outline>
+
+    <choice id="vst3" title="VST3-Plug-in"
+            description="Für Studio Pro, Cubase, Ableton Live, Bitwig, Reaper und andere VST3-Hosts. Ziel: /Library/Audio/Plug-Ins/VST3">
+        <pkg-ref id="com.lumora.lumorasynth.vst3"/>
+    </choice>
+    <choice id="au" title="Audio Unit (AU)"
+            description="Für Logic Pro, GarageBand und andere AU-Hosts. Ziel: /Library/Audio/Plug-Ins/Components">
+        <pkg-ref id="com.lumora.lumorasynth.au"/>
+    </choice>
+    <choice id="app" title="Standalone-App"
+            description="Lumora Synth ohne DAW spielen. Ziel: /Programme">
+        <pkg-ref id="com.lumora.lumorasynth.app"/>
+    </choice>
+
+    <pkg-ref id="com.lumora.lumorasynth.vst3" version="@VERSION@" onConclusion="none">vst3.pkg</pkg-ref>
+    <pkg-ref id="com.lumora.lumorasynth.au" version="@VERSION@" onConclusion="none">au.pkg</pkg-ref>
+    <pkg-ref id="com.lumora.lumorasynth.app" version="@VERSION@" onConclusion="none">app.pkg</pkg-ref>
+</installer-gui-script>

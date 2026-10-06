@@ -1,0 +1,11 @@
+#!/bin/bash
+# Runs after the VST3 and AU packages. $2 is the install location.
+
+# Downloaded files can carry a quarantine flag that makes hosts skip the plug-in.
+xattr -dr com.apple.quarantine "$2/Lumora Synth.vst3" 2>/dev/null || true
+xattr -dr com.apple.quarantine "$2/Lumora Synth.component" 2>/dev/null || true
+
+# Make the system pick up the new Audio Unit without a restart.
+killall -9 AudioComponentRegistrar 2>/dev/null || true
+
+exit 0
