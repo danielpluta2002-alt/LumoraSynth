@@ -66,6 +66,16 @@ jobs:
             [ "$minos" = "10.13" ]
           done
 
+      - name: Check Windows runtime dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          $dumpbin = Get-ChildItem -Path "$vs\VC\Tools\MSVC" -Recurse -Filter dumpbin.exe | Where-Object FullName -like "*Hostx64\x64*" | Select-Object -First 1
+          $deps = & $dumpbin.FullName /DEPENDENTS "build\LumoraSynth_artefacts\Release\VST3\Lumora Synth.vst3\Contents\x86_64-win\Lumora Synth.vst3"
+          $deps
+          if ($deps -match "VCRUNTIME|MSVCP") { throw "Plugin still depends on the Visual C++ runtime DLLs" }
+
       - name: Render test
         if: runner.os == 'Linux'
         run: xvfb-run -a build/LumoraRenderTest_artefacts/Release/LumoraRenderTest

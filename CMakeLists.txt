@@ -4,7 +4,11 @@ cmake_minimum_required(VERSION 3.22)
 # require the macOS version of the build machine.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
 
-project(LumoraSynth VERSION 1.0.2 LANGUAGES C CXX)
+# Link the MSVC runtime statically, so the plugin loads on Windows machines
+# without the Visual C++ Redistributable installed.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+project(LumoraSynth VERSION 1.0.3 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,7 +34,7 @@ if(APPLE)
 endif()
 
 juce_add_plugin(LumoraSynth
-    VERSION 1.0.2
+    VERSION 1.0.3
     COMPANY_NAME "Lumora"
     COMPANY_WEBSITE "https://github.com/danielpluta2002-alt"
     PLUGIN_MANUFACTURER_CODE Lmra
