@@ -19,93 +19,13 @@
 */
 
 #include "Presets.h"
-#include "Parameters.h"
+#include "PresetBuilder.h"
 
 namespace lumora
 {
 namespace
 {
-    using Values = std::vector<std::pair<juce::String, float>>;
-
-    /** Small builder so the preset table below stays readable. */
-    struct P
-    {
-        Values v;
-
-        P& set (const juce::String& id, float value) { v.emplace_back (id, value); return *this; }
-
-        P& osc (int i, int wave, float volume, int voices = 1, float detune = 0.2f, float stereo = 0.5f,
-                int octave = 0, int note = 0, float fine = 0.0f)
-        {
-            return set (pid::osc (i, "wave"), (float) wave).set (pid::osc (i, "volume"), volume)
-                  .set (pid::osc (i, "voices"), (float) voices).set (pid::osc (i, "detune"), detune)
-                  .set (pid::osc (i, "stereo"), stereo).set (pid::osc (i, "octave"), (float) octave)
-                  .set (pid::osc (i, "note"), (float) note).set (pid::osc (i, "fine"), fine);
-        }
-
-        P& filter (int i, int type, int slope, float cutoff, float reso = 0.0f, float drive = 0.0f, int input = 0)
-        {
-            return set (pid::filt (i, "type"), (float) type).set (pid::filt (i, "slope"), (float) slope)
-                  .set (pid::filt (i, "cutoff"), cutoff).set (pid::filt (i, "reso"), reso)
-                  .set (pid::filt (i, "drive"), drive).set (pid::filt (i, "input"), (float) input);
-        }
-
-        P& filters (int type, int slope, float cutoff, float reso = 0.0f, float drive = 0.0f)
-        {
-            return filter (0, type, slope, cutoff, reso, drive).filter (1, type, slope, cutoff, reso, drive);
-        }
-
-        P& ampEnv (int i, float a, float d, float s, float r)
-        {
-            return set (pid::amp (i, "attack"), a).set (pid::amp (i, "decay"), d)
-                  .set (pid::amp (i, "sustain"), s).set (pid::amp (i, "release"), r);
-        }
-
-        P& ampEnvs (float a, float d, float s, float r) { return ampEnv (0, a, d, s, r).ampEnv (1, a, d, s, r); }
-
-        P& modEnv (int i, float a, float d, float s, float r)
-        {
-            return set (pid::menv (i, "attack"), a).set (pid::menv (i, "decay"), d)
-                  .set (pid::menv (i, "sustain"), s).set (pid::menv (i, "release"), r);
-        }
-
-        P& lfo (int i, int wave, float rate, float gain = 1.0f, bool sync = false, int division = 7, bool freeRun = false)
-        {
-            return set (pid::lfo (i, "wave"), (float) wave).set (pid::lfo (i, "rate"), rate)
-                  .set (pid::lfo (i, "gain"), gain).set (pid::lfo (i, "sync"), sync ? 1.0f : 0.0f)
-                  .set (pid::lfo (i, "div"), (float) division).set (pid::lfo (i, "free"), freeRun ? 1.0f : 0.0f);
-        }
-
-        P& mod (int slot, int src, int dst, float amount)
-        {
-            return set (pid::mod (slot, "src"), (float) src).set (pid::mod (slot, "dst"), (float) dst)
-                  .set (pid::mod (slot, "amt"), amount);
-        }
-
-        P& delay (float mix, int divL = 9, int divR = 7, float fb = 0.35f)
-        {
-            return set ("delay_on", 1).set ("delay_mix", mix).set ("delay_divL", (float) divL)
-                  .set ("delay_divR", (float) divR).set ("delay_fb", fb);
-        }
-
-        P& reverb (float mix, float size = 0.7f, float damp = 0.5f)
-        {
-            return set ("reverb_on", 1).set ("reverb_mix", mix).set ("reverb_size", size).set ("reverb_damp", damp);
-        }
-
-        P& chorus (float mix, float rate = 0.6f, float depth = 0.4f)
-        {
-            return set ("chorus_on", 1).set ("chorus_mix", mix).set ("chorus_rate", rate).set ("chorus_depth", depth);
-        }
-
-        P& mono (bool legato, float porta)
-        {
-            return set ("voiceMode", (float) (legato ? modeLegato : modeMono)).set ("porta", porta);
-        }
-    };
-
-    // Division indices into syncDivisionNames():
-    constexpr int div1_4 = 7, div1_8D = 9, div1_8 = 10, div1_8T = 11, div1_16 = 13, div1_4D = 6, div1_2 = 4;
+    using namespace presetbuilder;
 
     std::vector<FactoryPreset> buildPresets()
     {
@@ -211,7 +131,7 @@ namespace
              .ampEnvs (0.05f, 0.3f, 0.9f, 0.25f)
              .reverb (0.2f));
 
-        add ("Glass Bell", "Keys", P()
+        add ("Glass Bell", "Bell", P()
              .osc (0, waveSine, 0.6f)
              .osc (1, waveSine, 0.3f, 1, 0.0f, 0.0f, 2, 7)
              .osc (2, waveTriangle, 0.25f, 2, 0.1f, 1.0f, 1)
@@ -243,7 +163,7 @@ namespace
              .delay (0.25f, div1_8D, div1_4)
              .reverb (0.3f, 0.8f));
 
-        add ("Lush Strings", "Pad", P()
+        add ("Lush Strings", "Strings", P()
              .osc (0, waveSaw, 0.6f, 6, 0.28f, 1.0f)
              .osc (1, waveSaw, 0.4f, 6, 0.24f, 1.0f, 1)
              .filters (filterLowpass, 0, 3500.0f, 0.05f)
@@ -295,6 +215,7 @@ namespace
              .set ("phaser_on", 1).set ("phaser_rate", 0.8f).set ("phaser_mix", 0.3f)
              .reverb (0.25f, 0.6f));
 
+        addPresetLibrary (list);
         return list;
     }
 } // namespace

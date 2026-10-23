@@ -1034,25 +1034,33 @@ private:
         presetBox.clear (juce::dontSendNotification);
         userPresets.clear();
 
+        // One submenu per category, in a fixed order; unknown categories go last.
         const auto& factory = getFactoryPresets();
-        juce::String lastCategory;
-        for (size_t i = 0; i < factory.size(); ++i)
+        juce::StringArray categories { "Init", "Lead", "Pluck", "Bass", "Pad", "Keys", "Bell", "Brass",
+                                       "Strings", "Chord", "Arp", "Sequence", "FX", "Drums" };
+        for (const auto& preset : factory)
+            categories.addIfNotAlreadyThere (preset.category);
+
+        auto* root = presetBox.getRootMenu();
+        for (const auto& category : categories)
         {
-            if (factory[i].category != lastCategory)
-            {
-                presetBox.addSectionHeading (factory[i].category);
-                lastCategory = factory[i].category;
-            }
-            presetBox.addItem (factory[i].name, (int) i + 1);
+            juce::PopupMenu sub;
+            for (size_t i = 0; i < factory.size(); ++i)
+                if (factory[i].category == category)
+                    (category == "Init" ? *root : sub).addItem ((int) i + 1, factory[i].name);
+
+            if (sub.getNumItems() > 0)
+                root->addSubMenu (category, sub);
         }
 
         userPresets = LumoraSynthProcessor::getUserPresetFolder().findChildFiles (juce::File::findFiles, false, "*.lumora");
         userPresets.sort();
         if (! userPresets.isEmpty())
         {
-            presetBox.addSectionHeading ("User");
+            juce::PopupMenu sub;
             for (int i = 0; i < userPresets.size(); ++i)
-                presetBox.addItem (userPresets[i].getFileNameWithoutExtension(), userIdOffset + i);
+                sub.addItem (userIdOffset + i, userPresets[i].getFileNameWithoutExtension());
+            presetBox.getRootMenu()->addSubMenu ("User", sub);
         }
 
         showPresetName();

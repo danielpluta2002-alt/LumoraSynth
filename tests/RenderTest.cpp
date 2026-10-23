@@ -113,6 +113,13 @@ int main (int argc, char** argv)
         outDir.createDirectory();
 
     std::cout << "Factory presets:\n";
+    {
+        juce::StringArray names;
+        for (int i = 0; i < proc.getNumPrograms(); ++i)
+            names.add (proc.getProgramName (i));
+        names.removeDuplicates (false);
+        check (names.size() == proc.getNumPrograms(), "preset names are unique");
+    }
     for (int i = 0; i < proc.getNumPrograms(); ++i)
     {
         proc.setCurrentProgram (i);
@@ -120,11 +127,11 @@ int main (int argc, char** argv)
 
         juce::AudioBuffer<float> audio;
         const auto st = render (proc, 3.0, { 48, 55, 60, 63 }, 1.5, outDir != juce::File() ? &audio : nullptr);
-        std::cout << "  " << juce::String (proc.getProgramName (i)).paddedRight (' ', 18)
+        std::cout << "  " << juce::String (proc.getProgramName (i)).paddedRight (' ', 22)
                   << " peak " << juce::String (st.peak, 3) << "  rms " << juce::String (st.rms, 4) << "\n";
         check (st.finite, "finite output");
         check (st.peak > 0.01f, "audible");
-        check (st.peak < 4.0f, "no runaway level");
+        check (st.peak < 1.6f, "sensible level");
 
         if (outDir != juce::File())
         {

@@ -34,7 +34,7 @@ Die Klangarchitektur lehnt sich an das bewährte Konzept klassischer „Two-Part
 Distortion (Overdrive, Hard Clip, Foldback, Bitcrush, Decimate) → Phaser → Chorus/Flanger → EQ (Bass/Höhen-Shelf) → Delay (Ping-Pong, Tempo-Sync, Low-/High-Cut) → Reverb → Compressor
 
 **Presets**
-- 17 Werks-Presets (Leads, Plucks, Bässe, Pads, Arp, Keys, FX), auch als Host-Programme verfügbar
+- 119 Werks-Presets in 13 Kategorien (Lead, Pluck, Bass, Pad, Keys, Bell, Brass, Strings, Chord, Arp, Sequence, FX, Drums), im Preset-Menü nach Kategorie sortiert und auch als Host-Programme verfügbar
 - Eigene Presets speichern/laden als `.lumora`-Dateien in `Dokumente/Lumora Synth/Presets`
 - Skalierbare Oberfläche (Ecke unten rechts ziehen) und Bildschirmtastatur
 
@@ -100,7 +100,7 @@ Mit Ausgabeordner schreibt der Test zusätzlich eine WAV-Datei pro Preset und Sc
 Source/
   Parameters.*        Parameterliste (IDs, Bereiche, Anzeigetexte)
   SynthParams.*       Parameter-Snapshots pro Audioblock
-  Presets.*           Werks-Presets
+  Presets.*           Werks-Presets (Basis), PresetBuilder.h, PresetLibrary.cpp: Preset-Bibliothek
   PluginProcessor.*   AudioProcessor: MIDI → Arp → Engine → Effekte → Master
   PluginEditor.*      Oberfläche
   dsp/
