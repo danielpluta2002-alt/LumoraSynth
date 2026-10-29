@@ -65,6 +65,8 @@ public:
 
     juce::String getPresetName() const;
     void setPresetName (const juce::String& name);
+    /** True when the current preset came from a .lumora file rather than the factory bank. */
+    bool isUserPreset() const;
 
     /** User presets: plain XML files holding the parameter state. */
     static juce::File getUserPresetFolder();

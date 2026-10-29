@@ -24,6 +24,7 @@
 
 #include "PluginProcessor.h"
 #include "Parameters.h"
+#include "Favorites.h"
 
 #include <iostream>
 
@@ -260,6 +261,33 @@ int main (int argc, char** argv)
         const float restored = other.getState().getRawParameterValue ("fctl_cutoff")->load();
         check (std::abs (restored - 12.0f) < 0.01f, "parameter restored (" + juce::String (restored) + ")");
         check (other.getPresetName() == proc.getPresetName(), "preset name restored (" + other.getPresetName() + ")");
+    }
+
+    std::cout << "Favourites:\n";
+    {
+        const auto dir = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("LumoraFavTest");
+        dir.deleteRecursively();
+        const auto file = dir.getChildFile ("Favorites.txt");
+
+        lumora::Favorites favs (file);
+        check (favs.getKeys().isEmpty(), "starts empty without a file");
+        check (favs.toggle (lumora::Favorites::factoryKey ("Reese Bass")), "toggle adds");
+        favs.toggle (lumora::Favorites::userKey ("My Pad"));
+
+        lumora::Favorites reread (file);
+        check (reread.contains ("F:Reese Bass") && reread.contains ("U:My Pad") && reread.getKeys().size() == 2,
+               "favourites persist");
+        check (! reread.toggle ("F:Reese Bass") && ! lumora::Favorites (file).contains ("F:Reese Bass"), "toggle removes");
+
+        const auto presetFile = dir.getChildFile ("My Pad.lumora");
+        proc.setCurrentProgram (3);
+        check (! proc.isUserPreset(), "factory preset is not a user preset");
+        check (proc.saveUserPreset (presetFile) && proc.isUserPreset(), "saved preset counts as user preset");
+        proc.setCurrentProgram (4);
+        check (proc.loadUserPreset (presetFile) && proc.isUserPreset() && proc.getPresetName() == "My Pad",
+               "loaded preset counts as user preset");
+        proc.setCurrentProgram (0);
+        dir.deleteRecursively();
     }
 
     std::cout << "Editor:\n";

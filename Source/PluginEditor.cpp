@@ -21,6 +21,7 @@
 #include "PluginEditor.h"
 #include "Parameters.h"
 #include "gui/Controls.h"
+#include "Favorites.h"
 
 using namespace lumora;
 using namespace lumora::gui;
@@ -839,6 +840,36 @@ private:
     ReverbPanel reverb;
     CompressorPanel comp;
 };
+
+//==============================================================================
+/** Star toggle that marks the current preset as a favourite. */
+class StarButton : public juce::Button
+{
+public:
+    StarButton() : juce::Button ("Favourite") { setClickingTogglesState (false); }
+
+    void paintButton (juce::Graphics& g, bool highlighted, bool down) override
+    {
+        auto area = getLocalBounds().toFloat().reduced (4.0f);
+        const float size = juce::jmin (area.getWidth(), area.getHeight());
+        area = area.withSizeKeepingCentre (size, size);
+
+        juce::Path star;
+        star.addStar (area.getCentre(), 5, size * 0.21f, size * 0.5f, 0.0f);
+
+        auto colour = getToggleState() ? colours::global : colours::textDim;
+        if (highlighted || down)
+            colour = colour.brighter (0.3f);
+
+        if (getToggleState())
+        {
+            g.setColour (colour);
+            g.fillPath (star);
+        }
+        g.setColour (colour);
+        g.strokePath (star, juce::PathStrokeType (1.4f, juce::PathStrokeType::curved));
+    }
+};
 } // namespace
 
 //==============================================================================
@@ -904,6 +935,8 @@ public:
         header.removeFromRight (18);
         nextButton.setBounds (header.removeFromRight (30));
         header.removeFromRight (4);
+        starButton.setBounds (header.removeFromRight (30));
+        header.removeFromRight (4);
         presetBox.setBounds (header.removeFromRight (300));
         header.removeFromRight (4);
         prevButton.setBounds (header.removeFromRight (30));
@@ -966,6 +999,10 @@ private:
         loadButton.setButtonText ("LOAD");
         saveButton.onClick = [this] { savePreset(); };
         loadButton.onClick = [this] { loadPreset(); };
+        starButton.setTooltip ("Add to / remove from favourites");
+        starButton.onClick = [this] { toggleFavourite(); };
+        addAndMakeVisible (starButton);
+
         aboutButton.setButtonText ("ABOUT");
         aboutButton.onClick = [] { showAbout(); };
         for (auto* b : { &prevButton, &nextButton, &saveButton, &loadButton, &aboutButton })
@@ -1042,8 +1079,17 @@ private:
             categories.addIfNotAlreadyThere (preset.category);
 
         auto* root = presetBox.getRootMenu();
+        favourites.reload();
+        favouriteKeys.clear();
+        bool favouritesAdded = false;
         for (const auto& category : categories)
         {
+            if (category != "Init" && ! favouritesAdded)
+            {
+                addFavouritesMenu (*root);
+                favouritesAdded = true;
+            }
+
             juce::PopupMenu sub;
             for (size_t i = 0; i < factory.size(); ++i)
                 if (factory[i].category == category)
@@ -1066,10 +1112,80 @@ private:
         showPresetName();
     }
 
+    void addFavouritesMenu (juce::PopupMenu& root)
+    {
+        // Factory favourites in bank order, then user favourites alphabetically.
+        const auto& factory = getFactoryPresets();
+        juce::PopupMenu sub;
+        for (const auto& preset : factory)
+        {
+            const auto key = lumora::Favorites::factoryKey (preset.name);
+            if (favourites.contains (key))
+            {
+                sub.addItem (favouriteIdOffset + favouriteKeys.size(), preset.name);
+                favouriteKeys.add (key);
+            }
+        }
+
+        juce::StringArray userNames;
+        for (const auto& key : favourites.getKeys())
+            if (lumora::Favorites::isUserKey (key) && userPresetFile (lumora::Favorites::nameOf (key)).existsAsFile())
+                userNames.add (lumora::Favorites::nameOf (key));
+        userNames.sortNatural();
+        for (const auto& name : userNames)
+        {
+            sub.addItem (favouriteIdOffset + favouriteKeys.size(), name + "  (User)");
+            favouriteKeys.add (lumora::Favorites::userKey (name));
+        }
+
+        if (sub.getNumItems() == 0)
+            sub.addSectionHeader ("Click the star to add the current preset");
+
+        root.addSubMenu ("Favorites", sub);
+        root.addSeparator();
+    }
+
+    static juce::File userPresetFile (const juce::String& name)
+    {
+        return LumoraSynthProcessor::getUserPresetFolder().getChildFile (name + ".lumora");
+    }
+
+    juce::String currentPresetKey() const
+    {
+        const auto name = processor.getPresetName();
+        return processor.isUserPreset() ? lumora::Favorites::userKey (name) : lumora::Favorites::factoryKey (name);
+    }
+
+    /** Menu id of the current preset in the bank or user list (not the favourites copy). */
+    int currentPresetId() const
+    {
+        const auto name = processor.getPresetName();
+        if (processor.isUserPreset())
+        {
+            for (int i = 0; i < userPresets.size(); ++i)
+                if (userPresets[i].getFileNameWithoutExtension() == name)
+                    return userIdOffset + i;
+            return 0;
+        }
+
+        const auto& factory = getFactoryPresets();
+        for (size_t i = 0; i < factory.size(); ++i)
+            if (factory[i].name == name)
+                return (int) i + 1;
+        return 0;
+    }
+
+    void toggleFavourite()
+    {
+        favourites.toggle (currentPresetKey());
+        refreshPresetList();
+    }
+
     void showPresetName()
     {
         shownPresetName = processor.getPresetName();
         presetBox.setText (shownPresetName, juce::dontSendNotification);
+        starButton.setToggleState (favourites.contains (currentPresetKey()), juce::dontSendNotification);
     }
 
     void presetChosen()
@@ -1078,7 +1194,23 @@ private:
         if (id <= 0)
             return;
 
-        if (id < userIdOffset)
+        if (id >= favouriteIdOffset)
+        {
+            const auto key = favouriteKeys[id - favouriteIdOffset];
+            const auto name = lumora::Favorites::nameOf (key);
+            if (lumora::Favorites::isUserKey (key))
+            {
+                processor.loadUserPreset (userPresetFile (name));
+            }
+            else
+            {
+                const auto& factory = getFactoryPresets();
+                for (size_t i = 0; i < factory.size(); ++i)
+                    if (factory[i].name == name)
+                        processor.setCurrentProgram ((int) i);
+            }
+        }
+        else if (id < userIdOffset)
             processor.setCurrentProgram (id - 1);
         else if (juce::isPositiveAndBelow (id - userIdOffset, userPresets.size()))
             processor.loadUserPreset (userPresets[id - userIdOffset]);
@@ -1088,13 +1220,15 @@ private:
 
     void stepPreset (int delta)
     {
+        // Steps through the bank and user presets; the favourites menu only holds copies.
         juce::Array<int> ids;
         for (int i = 0; i < presetBox.getNumItems(); ++i)
-            ids.add (presetBox.getItemId (i));
+            if (const int id = presetBox.getItemId (i); id > 0 && id < favouriteIdOffset)
+                ids.add (id);
         if (ids.isEmpty())
             return;
 
-        int index = ids.indexOf (presetBox.getSelectedId());
+        int index = ids.indexOf (currentPresetId());
         if (index < 0)
             index = delta > 0 ? -1 : 0;
         index = (index + delta + ids.size()) % ids.size();
@@ -1135,11 +1269,12 @@ private:
         arpPage.update (processor.getArpStep());
         voiceCount.setText ("VOICES " + juce::String (processor.getActiveVoiceCount()), juce::dontSendNotification);
 
-        if (processor.getPresetName() != shownPresetName)
+        if (processor.getPresetName() != shownPresetName
+            || starButton.getToggleState() != favourites.contains (currentPresetKey()))
             showPresetName();
     }
 
-    static constexpr int headerHeight = 48, keyboardHeight = 64, gap = 8, userIdOffset = 1000;
+    static constexpr int headerHeight = 48, keyboardHeight = 64, gap = 8, userIdOffset = 1000, favouriteIdOffset = 5000;
 
     LumoraSynthProcessor& processor;
     APVTS& state;
@@ -1157,6 +1292,9 @@ private:
     juce::ComboBox presetBox;
     juce::TextButton prevButton, nextButton, saveButton, loadButton, aboutButton;
     juce::Label voiceCount;
+    StarButton starButton;
+    lumora::Favorites favourites { lumora::Favorites::defaultFile() };
+    juce::StringArray favouriteKeys;
     juce::Array<juce::File> userPresets;
     juce::String shownPresetName;
     std::unique_ptr<juce::FileChooser> chooser;

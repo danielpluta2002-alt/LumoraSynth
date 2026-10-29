@@ -36,6 +36,7 @@ Distortion (Overdrive, Hard Clip, Foldback, Bitcrush, Decimate) → Phaser → C
 **Presets**
 - 119 Werks-Presets in 13 Kategorien (Lead, Pluck, Bass, Pad, Keys, Bell, Brass, Strings, Chord, Arp, Sequence, FX, Drums), im Preset-Menü nach Kategorie sortiert und auch als Host-Programme verfügbar
 - Eigene Presets speichern/laden als `.lumora`-Dateien in `Dokumente/Lumora Synth/Presets`
+- Favoriten: Der Stern neben dem Preset-Menü markiert das aktuelle Preset (Werks- oder eigenes Preset). Favoriten stehen im Menü unter „Favorites“ und gelten für alle Instanzen (gespeichert in `Dokumente/Lumora Synth/Favorites.txt`)
 - Skalierbare Oberfläche (Ecke unten rechts ziehen) und Bildschirmtastatur
 
 ## Installation (fertige Builds)

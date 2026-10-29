@@ -25,6 +25,7 @@
 namespace
 {
     const juce::Identifier presetNameId { "presetName" };
+    const juce::Identifier presetIsUserId { "presetIsUser" };
     constexpr const char* presetFileExtension = ".lumora";
 }
 
@@ -120,6 +121,7 @@ void LumoraSynthProcessor::setCurrentProgram (int index)
     currentProgram = index;
     lumora::applyFactoryPreset (state, presets[(size_t) index]);
     setPresetName (presets[(size_t) index].name);
+    state.state.setProperty (presetIsUserId, false, nullptr);
 }
 
 const juce::String LumoraSynthProcessor::getProgramName (int index)
@@ -131,6 +133,11 @@ const juce::String LumoraSynthProcessor::getProgramName (int index)
 juce::String LumoraSynthProcessor::getPresetName() const
 {
     return state.state.getProperty (presetNameId, "Init").toString();
+}
+
+bool LumoraSynthProcessor::isUserPreset() const
+{
+    return state.state.getProperty (presetIsUserId, false);
 }
 
 void LumoraSynthProcessor::setPresetName (const juce::String& name)
@@ -165,6 +172,7 @@ bool LumoraSynthProcessor::saveUserPreset (const juce::File& file)
 {
     auto target = file.hasFileExtension (presetFileExtension) ? file : file.withFileExtension (presetFileExtension);
     setPresetName (target.getFileNameWithoutExtension());
+    state.state.setProperty (presetIsUserId, true, nullptr);
 
     auto copy = state.copyState();
     if (auto xml = copy.createXml())
@@ -180,6 +188,7 @@ bool LumoraSynthProcessor::loadUserPreset (const juce::File& file)
 
     state.replaceState (juce::ValueTree::fromXml (*xml));
     setPresetName (file.getFileNameWithoutExtension());
+    state.state.setProperty (presetIsUserId, true, nullptr);
     return true;
 }
 
