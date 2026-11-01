@@ -23,7 +23,7 @@ jobs:
             configure: cmake -B build -A x64 -DLUMORA_BUILD_TESTS=OFF
             artifact: LumoraSynth-Windows
           - name: macOS
-            os: macos-latest
+            os: macos-14
             configure: cmake -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DLUMORA_BUILD_TESTS=OFF
             artifact: LumoraSynth-macOS
           - name: Linux
