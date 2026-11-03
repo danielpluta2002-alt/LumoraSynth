@@ -1,10 +1,8 @@
 name: macOS runner probe
 
 # Checks which hosted macOS runner labels currently get a machine.
+# Start it by hand (Actions -> macOS runner probe -> Run workflow) when Mac builds hang.
 on:
-  push:
-    branches: [main]
-    paths: [".github/workflows/macos-probe.yml"]
   workflow_dispatch:
 
 jobs:
